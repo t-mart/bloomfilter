@@ -88,6 +88,7 @@ class TestBloomFilter(unittest.TestCase):
             for s in perm:
                 bf[s] = True
                 self.assertTrue(bf[s])
+                self.assertTrue(s in bf)
 
     def test_bad_bits_per_table(self):
         with self.assertRaises(bloomfilter.BloomFilterException):

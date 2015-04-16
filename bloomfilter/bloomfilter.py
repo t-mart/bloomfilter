@@ -95,6 +95,8 @@ class BloomFilter:
                                               self.bits_per_table))
         return True
 
+    __contains__ = __getitem__
+
     def __setitem__(self, key, value):
         """Set key in the Bloom Filter. value is ignored."""
         for hash_func, table in self._iter_func_and_table(key):
