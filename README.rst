@@ -58,7 +58,7 @@ Example
     bf[a] = True
     bf[a] # => True
 
-Querying for/Setting a key
+Querying for/Setting a Key
 --------------------------
 
 Query a BloomFilter by simply calling it's __getitem__ method with your key,
@@ -78,12 +78,12 @@ Wrap your object hash functions with the ``@bloom_hash`` decorator. This marks
 your hash functions so that BloomFilter can call them when querying or setting
 a key.
 
-**The number of ``@bloom_hash``-ed hash functions you provide will be the number
-of underlying tables in your ``BloomFilter``.** More tables can lead to more
+**The number of hash functions you provide will be the number
+of underlying tables in your Bloom filter.** More tables can lead to more
 accuracy, but will cost most space.
 
 BloomFilter's are agnostic of the objects they record, so your hash functions
-have a 3 requirements to ensure their generality.
+have three requirements to ensure their generality.
 
 1. Hash functions must be object methods with only one positional argument
    max_size, indicating the range [0, max_size] of the hash .  Therefore, hash
@@ -98,13 +98,17 @@ have a 3 requirements to ensure their generality.
    underlying tables, so any addition/removal/modification of will break any
    guarantees.
 
-Hash function uniformity
+Hash Function Properties
 ------------------------
 
 Ideally, hash functions will distribute evenly over the [0, max_size] range,
-which is why the max_size argument is given to hash functions. For example,
-functions that simply ``some_value % max_size`` will bias towards the left size
-of the range. Keep this in mind.
+which is why the max_size argument is given to hash functions. It is up to the
+user to return well-distributed values over the entire range.
 
-Maybe look at an arbitrary length hash, like the recent `SHA-3
-<https://en.wikipedia.org/wiki/SHA-3>`_.
+It is my recommendation to use peer-reviewed hash functions that have properties
+appropriate to your application.
+
+Most popular hash functions have the added boon of providing hash spaces that
+are much larger than any table sizes you will make with a Bloom filter. So,
+returning hashes like ``SHA512(my_data) % max_size`` will be sufficient for most
+purposes.
