@@ -54,9 +54,15 @@ class TestBloomHash(unittest.TestCase):
 
     def test_bloom_hash_gather(self):
         gathered = set(bloom_hash._gather_hash_funcs(MyString))
-        mystring_funcs = {MyString.foo, MyString.bar, MyString.baz,
-            MyString.qux}
-        self.assertSetEqual(gathered, mystring_funcs)
+        funcs = {MyString.foo, MyString.bar, MyString.baz, MyString.qux}
+        self.assertSetEqual(gathered, funcs)
+
+    def test_subclassed_obj(self):
+        class Foo(MyString):
+            pass
+        gathered = set(bloom_hash._gather_hash_funcs(Foo))
+        funcs = {Foo.foo, Foo.bar, Foo.baz, Foo.qux}
+        self.assertSetEqual(gathered, funcs)
 
 
 class TestBloomFilter(unittest.TestCase):
