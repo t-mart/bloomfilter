@@ -8,49 +8,48 @@ from bloomfilter import bloom_hash
 
 class MyString(str):
     @bloom_hash
-    def foo(self):
-        return sum(ord(c) for c in self)
+    def foo(self, size):
+        return sum(ord(c) for c in self) % size
 
     @bloom_hash
-    def bar(self):
-        return self.__hash__()
+    def bar(self, size):
+        return +self.__hash__() % size
 
     @bloom_hash
-    def baz(self):
-        return functools.reduce(operator.mul, (ord(c) for c in self))
+    def baz(self, size):
+        return functools.reduce(operator.mul, (ord(c) for c in self)) % size
 
     @bloom_hash
-    def qux(self):
-        return 1
-
+    def qux(self, size):
+        return 0
 
 strings = ['lily', 'oleander', 'scarlet pimpernel', 'spanish oyster']
 strings = [MyString(s) for s in strings]
 
-class TooManyArgHash:
-    @bloom_hash
-    def too_many_arg_hash(self, foo, bar):
-        return 1
-
-
-class BadValueHash:
-    @bloom_hash
-    def bad_value_hash(self):
-        return 'not a number =('
-
 
 class TestBloomHash(unittest.TestCase):
-    def test_bad_call_hash(self):
-        bf = bloomfilter.BloomFilter(10, TooManyArgHash)
-        o = TooManyArgHash()
-        with self.assertRaises(bloomfilter.BloomFilterHashFunctionException):
-            o.too_many_arg_hash()
+    def hash_value_raises_hash_func_exception(self, return_val, maxsize=10):
+        class BadHash:
+            @bloom_hash
+            def bad_hash(self, foo, bar):
+                return return_val
 
-    def test_bad_value_hash(self):
-        bf = bloomfilter.BloomFilter(10, BadValueHash)
-        o = BadValueHash()
+        bf = bloomfilter.BloomFilter(maxsize, BadHash)
+        obj = BadHash()
         with self.assertRaises(bloomfilter.BloomFilterHashFunctionException):
-            o.bad_value_hash()
+            obj.bad_hash()
+
+    def test_bad_call_hash(self):
+        self.hash_value_raises_hash_func_exception(0)
+
+    def test_non_numeric_hash(self):
+        self.hash_value_raises_hash_func_exception('not a numbner')
+
+    def test_negative_hash(self):
+        self.hash_value_raises_hash_func_exception(-1)
+
+    def test_too_large_hash(self):
+        self.hash_value_raises_hash_func_exception(10, 10)
 
     def test_bloom_hash_gather(self):
         gathered = set(bloom_hash._gather_hash_funcs(MyString))
@@ -62,6 +61,19 @@ class TestBloomHash(unittest.TestCase):
             pass
         gathered = set(bloom_hash._gather_hash_funcs(Foo))
         funcs = {Foo.foo, Foo.bar, Foo.baz, Foo.qux}
+        self.assertSetEqual(gathered, funcs)
+
+    def test_dynamic_class(self):
+        def dynamic_bloom_hash_func(ret_val):
+            return bloom_hash(lambda fself, maxsize: retval)
+
+        Dynamic = type('Dynamic', (object,),
+            {'a': dynamic_bloom_hash_func(123),
+             'b': dynamic_bloom_hash_func(345),
+             'c': dynamic_bloom_hash_func(522),})
+
+        gathered = set(bloom_hash._gather_hash_funcs(Dynamic))
+        funcs = {Dynamic.a, Dynamic.b, Dynamic.c}
         self.assertSetEqual(gathered, funcs)
 
 
