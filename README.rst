@@ -44,12 +44,12 @@ Example
 
     class Record(str):
         @bloom_hash
-        def hasha(self, maxsize):
-            return sum(ord(c) for c in self) % maxsize
+        def hasha(self, max_size):
+            return sum(ord(c) for c in self) % max_size
 
         @bloom_hash
-        def hashb(self, maxsize):
-            return self.__hash__() % maxsize
+        def hashb(self, max_size):
+            return self.__hash__() % max_size
 
     bf = BloomFilter(bits_per_table=2**10, cls=Record)
 
@@ -82,21 +82,28 @@ a key.
 of underlying tables in your Bloom filter.** More tables can lead to more
 accuracy, but will cost most space.
 
-BloomFilter's are agnostic of the objects they record, so your hash functions
+BloomFilter is agnostic of the objects they record, so your hash functions
 have three requirements to ensure their generality.
 
 1. Hash functions must be object methods with only one positional argument
    max_size, indicating the range [0, max_size] of the hash .  Therefore, hash
    functions will have access to the conventional ``self`` of an object, so you
    can use its data to generate a hash, and the max_size allows methods to
-   create uniform distributions, if you'd like.
-2. Hash functions must return an integer less than or equal to the
-   BloomFilter.bits_per_table. They are used for indexing into an underlying
-   table.
+   create uniform distributions, if you'd like. An example probably speaks more:
+    .. code-block:: python
+
+       @bloom_hash
+       def my_hash(self, max_size):
+           ...
+           return some_value_based_on_data % max_size
+
+2. Hash functions must return an integer less than max_size (this is the same as
+   BloomFilter.bits_per_table) because they are used for indexing into an
+   underlying table.
 3. ``@bloom_hash`` must be applied to your class's hash functions **before**
-   ``BloomFilter`` initialization. Your hash functions are tightly linked to the
-   underlying tables, so any addition/removal/modification of will break any
-   guarantees.
+   ``BloomFilter`` initialization. You usually get this without thinking about
+   it. This is a requirement because ``@bloom_hash`` functions are gathered at
+   ``BloomFilter`` initialization time.
 
 Hash Function Properties
 ------------------------
