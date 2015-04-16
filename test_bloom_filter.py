@@ -71,13 +71,6 @@ class TestBloomFilter(unittest.TestCase):
                 bf[s] = True
                 self.assertTrue(bf[s])
 
-    def test_pigeonhole(self):
-        pigeonhole_len = len(strings) - 1
-        bf = bloomfilter.BloomFilter(pigeonhole_len, MyString)
-        for s in strings:
-            bf[s] = True
-        self.assertGreaterEqual(sum(bf[s] for s in strings), 1)
-
     def test_bad_bits_per_table(self):
         with self.assertRaises(bloomfilter.BloomFilterException):
             bloomfilter.BloomFilter(0, MyString)
